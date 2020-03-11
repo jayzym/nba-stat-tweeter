@@ -1,6 +1,7 @@
 import schedule
 import os
 import time
+import pandas
 import twitter
 from nba_api.stats.endpoints import boxscoretraditionalv2
 from nba_api.stats.static import teams
@@ -36,7 +37,7 @@ def check_and_post(player_name, city):
     # Search for player, and build a string of his stats
     for player in game_stats.player_stats.get_dict()["data"]:
         if player_name in player:
-            stats = "{0}'s stats for {1} {2}: points: {3}, rebounds: {4}, assists: {5}".format(player_name, last_team_game["GAME_DATE"], last_team_game["MATCHUP"], player[-2], player[-8], player[-9])
+            stats = "{0}'s stats for {1} {2}: points: {3}, rebounds: {4}, assists: {5}".format(player_name, last_team_game["GAME_DATE"], last_team_game["MATCHUP"], player[-2], player[-8], player[-7])
 
     # Make Twitter API
     api = twitter.Api(consumer_key=ck,
@@ -44,10 +45,8 @@ def check_and_post(player_name, city):
         access_token_key=atk,
         access_token_secret=ats)
     try:
-        print(player)
-        print(stats)
-        #status = api.PostUpdate(stats)
-        #print("{0} just posted: {1}".format(status.user.name, status.text))
+        status = api.PostUpdate(stats)
+        print("{0} just posted: {1}".format(status.user.name, status.text))
     except UnicodeDecodeError:
         print("Failed to post to Twitter")
         sys.exit(2)
@@ -60,8 +59,15 @@ def get_credentials():
     lines = open(FILENAME).read().splitlines()
     ck = lines[0]; cs  = lines[1]; atk = lines[2]; ats = lines[3]
 
+
+print("Enter the player's name:")
+player = input()
+
+print("Enter the team the player plays for")
+team = input()
+
 get_credentials()
-check_and_post("Nikola Jokic", "DEN")
+check_and_post(player, team)
 
 """schedule.every().day.at("10:00").do(check_and_post)
 while True:
